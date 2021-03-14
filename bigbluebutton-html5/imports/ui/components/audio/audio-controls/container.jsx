@@ -5,11 +5,14 @@ import AudioManager from '/imports/ui/services/audio-manager';
 import { makeCall } from '/imports/ui/services/api';
 import lockContextContainer from '/imports/ui/components/lock-viewers/context/container';
 import logger from '/imports/startup/client/logger';
+import Storage from '/imports/ui/services/storage/session';
+import getFromUserSettings from '/imports/ui/services/users-settings';
 import AudioControls from './component';
 import AudioModalContainer from '../audio-modal/container';
 import Service from '../service';
 
 const AudioControlsContainer = props => <AudioControls {...props} />;
+const APP_CONFIG = Meteor.settings.public.app;
 
 const processToggleMuteFromOutside = (e) => {
   switch (e.data) {
@@ -34,6 +37,10 @@ const processToggleMuteFromOutside = (e) => {
 };
 
 const handleLeaveAudio = () => {
+  const skipOnFistJoin = getFromUserSettings('bbb_skip_check_audio_on_first_join', APP_CONFIG.skipCheckOnJoin);
+  if (skipOnFistJoin && !Storage.getItem('getEchoTest')) {
+    Storage.setItem('getEchoTest', true);
+  }
   Service.exitAudio();
   logger.info({
     logCode: 'audiocontrols_leave_audio',
